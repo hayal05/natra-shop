@@ -1,0 +1,6 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+oracledb==2.4.1
+pyjwt==2.9.0
+playwright==1.49.1
+oci==2.135.2

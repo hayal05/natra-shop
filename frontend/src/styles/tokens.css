@@ -1,0 +1,68 @@
+/*
+ * NATRA design tokens.
+ *
+ * Brand color: blood red. Picked a deep, slightly muted red rather than
+ * a bright fire-engine red, since "blood red" as a brand color reads
+ * best desaturated a touch — a pure #FF0000 skews more like an alert
+ * color than a brand color. Adjust --color-brand alone if the exact
+ * shade needs tuning; every other brand-derived value below is
+ * computed from it so the rest of the UI follows automatically.
+ */
+
+:root {
+  /* Brand */
+  --color-brand: #7a0c0c;
+  --color-brand-dark: #4e0707;
+  --color-brand-light: #a83232;
+  --color-brand-contrast: #ffffff; /* text color placed on top of --color-brand */
+
+  /* Neutrals — "clean neutral/white interface" per the project brief */
+  --color-bg: #ffffff;
+  --color-surface: #f7f5f5;
+  --color-border: #e3dede;
+  --color-text: #201818;
+  --color-text-muted: #6b5f5f;
+
+  /* Status colors (kept separate from brand red so errors don't blend
+     into brand-colored buttons/links) */
+  --color-success: #1f7a3d;
+  --color-error: #c0392b;
+  --color-warning: #b8860b;
+
+  /* Sidebar (Task 70). Deliberately its own cream-white palette rather
+     than the blood-red --color-brand used for buttons/prices — the
+     project owner asked for the nav "plate" (the sidebar's own
+     background surface) to read as cream white, not brand red, even
+     though brand red stays as-is everywhere else (buttons, prices,
+     links). --color-sidebar-active-* gives the current-page link a
+     soft warm highlight instead of a hard red block, to keep the
+     minimal/clean feel Task 70 asked for. */
+  --color-sidebar-bg: #faf6ef;
+  --color-sidebar-border: #e8e0cf;
+  --color-sidebar-text: var(--color-text);
+  --color-sidebar-text-muted: var(--color-text-muted);
+  --color-sidebar-active-bg: #f1e8d4;
+  --color-sidebar-active-text: var(--color-brand-dark);
+  --sidebar-width: 240px;
+
+  /* Spacing scale (rem) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Type */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
