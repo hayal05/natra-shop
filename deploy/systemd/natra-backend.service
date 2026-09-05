@@ -1,0 +1,70 @@
+# Task 46 — systemd unit for the NATRA backend (Uvicorn + FastAPI),
+# targeting the Oracle Cloud Free Tier Linux VM (per
+# CLAUDE_MASTER_PROMPT.md section 6/7).
+#
+# This is a skeleton to copy into place and adjust paths/usernames for
+# the real VM, not something this repo runs directly. Install:
+#
+#   sudo cp deploy/systemd/natra-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now natra-backend
+#
+# Assumes the repo is deployed to /opt/natra (adjust WorkingDirectory/
+# ExecStart below if a different path is used) and that a Python
+# virtualenv already exists at /opt/natra/backend/.venv with
+# `pip install -r requirements.txt` (and `playwright install
+# --with-deps chromium`, per SETUP.md) already run inside it.
+#
+# CRITICAL — do not add `--workers N` (N > 1) to ExecStart. Task 44's
+# rate limiter (`app/rate_limit.py`) is an in-memory, single-process
+# sliding window by design (see that module's own docstring and
+# CURRENT_STATUS.md's Task 44 notes) — it assumes exactly one Uvicorn
+# process. Multiple worker processes would each keep an independent
+# counter, silently giving an attacker roughly N login attempts per
+# process instead of N total, with no error or warning to reveal it.
+# If NATRA ever needs multiple workers/machines, that requires first
+# moving the rate limiter to a shared store (e.g. Redis) — a
+# deliberately deferred, not-yet-needed change (see `rate_limit.py`),
+# not something to work around by quietly adding workers here.
+#
+# --proxy-headers (with the default --forwarded-allow-ips=127.0.0.1)
+# tells Uvicorn to trust X-Forwarded-For/X-Forwarded-Proto from
+# requests originating at 127.0.0.1 — i.e. from Nginx, which will run
+# on the same VM and proxy to this service over loopback (see
+# deploy/nginx/natra.conf). With this flag, Starlette's
+# `request.client.host` is rewritten to the real browser/client IP
+# instead of always reading 127.0.0.1 (Nginx's own address). This is
+# what resolves Task 44's flagged "`_rate_limit_key()` reads
+# `request.client.host` directly, which will be Nginx's address behind
+# a reverse proxy" note — purely through this infrastructure/startup
+# flag plus Nginx sending the header (see the Nginx config's own
+# comment on this), with no application code change needed, since
+# `_rate_limit_key()` already just reads `request.client.host`.
+
+[Unit]
+Description=NATRA backend (FastAPI via Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=natra
+Group=natra
+WorkingDirectory=/opt/natra/backend
+EnvironmentFile=/opt/natra/backend/.env.production
+ExecStart=/opt/natra/backend/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --proxy-headers
+Restart=on-failure
+RestartSec=5
+
+# Basic hardening — the service only needs to read its own working
+# directory (plus whatever ORACLE_WALLET_DIR points at) and talk to
+# Oracle over the network; it has no reason to write anywhere on disk
+# or gain new privileges.
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
